@@ -1,2 +1,3 @@
 ** Describe any updates here **
 1. 10-31-2016 John Bent - created log.txt
+2. 11-04-2016 John Bent - updated FlightList.java (fixed errors)
