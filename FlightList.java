@@ -15,7 +15,7 @@ public class FlightList
 	private String[][] cities;
 	private String[][] fleet;
 	private String[][] gates = {{"G0", "Open"}, {"G1", "Open"}, {"G2", "Open"}, {"G3", "Open"},
-			{"G4", "Open"}, {"G5", "Open"}, {"G6", "Open"}, {"G8", "Open"}};
+			{"G4", "Open"}, {"G5", "Open"}, {"G6", "Open"}, {"G7", "Open"}};
 	// Gates G0-G7 initially listed as "Open", indicating no craft is docked at that gate
 	
 	public FlightList()
@@ -30,22 +30,21 @@ public class FlightList
 		//to store destination cities in 2D array
 		// {City name, Airport code, distance from ATL, est. travel time, last visited time}
 		BufferedReader reader = null;
+		ArrayList<String> cityList = new ArrayList<String>();
 		try 
 		{
 			File file = new File("cities.txt");
 			reader = new BufferedReader(new FileReader(file));
-			
-			int i = 1;
-			while (reader.readLine() != null)
-			{
-				i++;
-			}
-			cities = new String[i][5];
 			String line;
-			String[] selectCity;
-			for (int j=0; j<i; j++)
+			while ((line = reader.readLine()) != null)
 			{
-				line = reader.readLine();
+				cityList.add(line);
+			}
+			cities = new String[cityList.size()][5];
+			String[] selectCity;
+			for (int j=0; j<cityList.size(); j++)
+			{
+				line = cityList.get(j);
 				selectCity = line.split(" ");
 				for (int k=0; k<4; k++)
 				{
@@ -73,22 +72,21 @@ public class FlightList
 		// 10 aircraft
 		// {aircraft number, aircraft model, aircraft capacity, aircraft range}
 		BufferedReader reader = null;
+		ArrayList<String> fleetList = new ArrayList<String>();
 		try 
 		{
 			File file = new File("fleet.txt");
 			reader = new BufferedReader(new FileReader(file));
-			
-			int i = 1;
-			while (reader.readLine() != null)
-			{
-				i++;
-			}
-			fleet = new String[i][6];
 			String line;
-			String[] selectAircraft;
-			for (int j=0; j<i; j++)
+			while ((line = reader.readLine()) != null)
 			{
-				line = reader.readLine();
+				fleetList.add(line);
+			}
+			fleet = new String[fleetList.size()][6];
+			String[] selectAircraft;
+			for (int j=0; j<fleetList.size(); j++)
+			{
+				line = fleetList.get(j);
 				selectAircraft = line.split(" ");
 				for (int k=0; k<4; k++)
 				{
@@ -129,27 +127,35 @@ public class FlightList
 				do
 				{
 					city = rand.nextInt(29);
-					destination = cities[city][2];
-				} while (cities[city][4].equals("na"));
+					destination = cities[city][0];
+				} while (!cities[city][4].equals("na"));
+				
 				int flightTime = Integer.parseInt(cities[city][3]);
 				SimpleDateFormat ft = new SimpleDateFormat("E yyyy.MM.dd 'at' hh:mm:ss a zzz");
-				cities[city][4] = ft.format(getArrivalDate(currentTime, flightTime));
-				newFlight = new Flight(constructFlightID(), (i+1), getAircraftDirection(i),
-						destination, currentTime,flightTime, getFreeGate());
-				fleet[i][4] = "inUse";
-				flightList.add(newFlight);
+				cities[city][4] = ft.format(getArrivalDate(currentTime, flightTime)); // set new "last visited time"
+					//for destination city to the estimated arrival time of flight
+				
+				String gate = getFreeGate();
+				if (gate != null)
+				{ // If there is a free gate, create flight
+					// New flight constructed
+					newFlight = new Flight(constructFlightID(), (i+1), getAircraftDirection(i),
+							destination, currentTime,flightTime, gate);
+					fleet[i][4] = "inUse"; //set plane to "inUse
+					flightList.add(newFlight); //add new flight to flight list
+				}
 			}
 		}
 	}
 	
 	public Date getArrivalDate(Date currentDate, int flightTime)
-	{
+	{ // adds second to parameter to first parameter and returns resulting date
 		Date arrivalDate = new Date(currentDate.getTime()+(flightTime*60000));
 		return arrivalDate;
 	}
 	
 	public String getFreeGate()
-	{
+	{ // returns first free gate ("Open") in list and sets gate status to  "inUse"
 		int i =0;
 		while (i<gates.length && !gates[i][1].equals("Open"))
 		{
@@ -180,6 +186,7 @@ public class FlightList
 		String selectedID;
 		if (flightList.size()>0)
 		{
+			maxID = flightList.get(0).getFlightID();
 			for (int i=0; i<flightList.size(); i++)
 			{
 				selectedID = flightList.get(i).getFlightID();
@@ -243,11 +250,12 @@ public class FlightList
 	public void printFlightList()
 	{ // prints flight list to console "# FlightID Destination DepartureTime Gate Status"
 		Flight selected;
+		System.out.println("Number\tFlight ID\tDestination\tDeparture Date\tGate\tStatus");
 		for (int i=0; i<flightList.size(); i++)
 		{
 			selected = flightList.get(i);
-			System.out.println(i + ": " + selected.getFlightID() + "/t" + selected.getDestination() + "/t"
-					+ selected.printDepartureDate() + "/t" + selected.getGate() + "/t" + selected.getStatus());
+			System.out.println(i + ": " + selected.getFlightID() + "\t" + selected.getDestination() + "\t"
+					+ selected.printDepartureDate() + "\t" + selected.getGate() + "\t" + selected.getStatus());
 		}
 	}
 	
